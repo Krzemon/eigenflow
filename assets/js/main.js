@@ -1,26 +1,22 @@
 document.getElementById("simulation-form").addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  // Pobranie danych z formularza
   const formData = new FormData(e.target);
   const data = Object.fromEntries(formData.entries());
 
   try {
-    // POST do backendu
     const response = await fetch("http://localhost:8000/mp/plot", {
       method: "POST",
       body: new URLSearchParams(data)
     });
 
     const json = await response.json();
+    const ctx = document.getElementById("histogram-chart").getContext("2d");
 
-    const canvas = document.getElementById("histogram-chart");
-    const ctx = canvas.getContext("2d");
-
-    // Usuwamy poprzedni wykres, jeśli istnieje
+    // usuń poprzedni wykres
     if (window.currentChart) window.currentChart.destroy();
 
-    // Tworzymy nowy wykres z animacją
+    // animacja rysowania słupków i linii
     window.currentChart = new Chart(ctx, {
       type: "bar",
       data: {
@@ -29,15 +25,15 @@ document.getElementById("simulation-form").addEventListener("submit", async (e) 
           {
             label: "Histogram",
             data: json.hist,
-            backgroundColor: "rgba(59, 130, 246, 0.5)",
-            borderColor: "rgb(37, 99, 235)",
+            backgroundColor: "rgba(59,130,246,0.5)",
+            borderColor: "rgb(37,99,235)",
             borderWidth: 1
           },
           {
             label: "Krzywa teoretyczna",
             data: json.theory,
             type: "line",
-            borderColor: "rgb(234, 88, 12)",
+            borderColor: "rgb(234,88,12)",
             borderWidth: 2,
             fill: false,
             tension: 0.3,
@@ -47,18 +43,11 @@ document.getElementById("simulation-form").addEventListener("submit", async (e) 
       },
       options: {
         responsive: true,
-        animations: {
-          y: {
-            duration: 1500,
-            easing: 'easeOutQuart'
-          },
-          x: {
-            duration: 0 // brak animacji osi X
-          },
-          tension: {
-            duration: 1000,
-            easing: 'easeOutQuart'
-          }
+        maintainAspectRatio: false,
+        animation: {
+          duration: 1800,
+          easing: "easeOutCubic",
+          delay: (context) => context.dataIndex * 10
         },
         scales: {
           x: { title: { display: true, text: "Wartości" } },
@@ -71,7 +60,7 @@ document.getElementById("simulation-form").addEventListener("submit", async (e) 
       }
     });
 
-    // Aktualizacja panelu statystyk
+    // aktualizacja statystyk
     document.getElementById("mean-lambda").textContent = json.stats.mean.toFixed(3);
     document.getElementById("var-lambda").textContent = json.stats.var.toFixed(3);
     document.getElementById("min-lambda").textContent = json.stats.min.toFixed(3);

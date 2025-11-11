@@ -1,23 +1,73 @@
 @import "https://cdn.jsdelivr.net/npm/tailwindcss@3.4.13/dist/tailwind.min.css";
 
-/* Dodatkowe style (opcjonalnie) */
+/* Kolory główne */
 :root {
   --primary: #2563eb;
   --accent: #f97316;
+  --bg-panel: #ffffff;
+  --text-muted: #6b7280;
 }
 
+/* Body */
 body {
   font-family: system-ui, sans-serif;
+  background-color: #f9fafb;
 }
 
+/* Panele */
+.panel {
+  background-color: var(--bg-panel);
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+  padding: 1.5rem;
+  transition: transform 0.1s, box-shadow 0.2s;
+}
+.panel:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+}
+
+/* Formularz inputy */
+.form-grid label input {
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  padding: 0.5rem;
+  transition: border-color 0.2s;
+}
+.form-grid label input:focus {
+  border-color: var(--primary);
+  outline: none;
+}
+
+/* Przycisk */
 button {
   background-color: var(--primary);
   color: white;
   border-radius: 0.375rem;
   padding: 0.5rem 1rem;
-  transition: background-color 0.2s;
+  transition: background-color 0.2s, transform 0.1s;
 }
-
 button:hover {
   background-color: #1d4ed8;
+  transform: scale(1.02);
+}
+
+/* Chart container */
+#chart-container {
+  background-color: #f3f4f6;
+  border-radius: 0.5rem;
+  border: 1px dashed #d1d5db;
+  padding: 1rem;
+  min-height: 350px;
+  transition: background-color 0.2s;
+}
+#chart-container:hover {
+  background-color: #e5e7eb;
+}
+
+/* Lista statystyk (jeśli dodasz panel statystyk w przyszłości) */
+.stats-list li {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.25rem 0;
 }

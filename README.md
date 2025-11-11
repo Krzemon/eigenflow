@@ -94,9 +94,9 @@ Zwraca:
   "lambda_grid": [...]
 }
 
+## NOWE
 
 Obsługuje generowanie macierzy, obliczanie wartości własnych, histogramu itd.
-
 4. /api/theory – endpoint do równania Marczenko–Pastura (GET lub POST)
 
 Liczy gęstość analityczną dla danego q = N/T oraz rozkładu macierzy kowariancji

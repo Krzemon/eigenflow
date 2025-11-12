@@ -3,50 +3,104 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>EigenFlow – Wizualizacja rozkładów</title>
-  <link rel="stylesheet" href="assets/css/style.css" />
+  <title>EigenViz Explorer – Wizualizacja rozkładów</title>
+  <link rel="stylesheet" href="css/style.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.min.js"></script>
-  <script src="assets/js/main.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
 </head>
-
 <body>
-  <header>
-    <h1>EigenFlow</h1>
-    <p>Wizualizacja rozkładu wartości własnych</p>
+
+  <header class="main-header">
+    <h1 class="header-title">EigenViz Explorer</h1>
+    <p class="header-subtitle">Wizualizacja rozkładu wartości własnych</p>
   </header>
 
-  <main>
+  <main class="main-area">
+
+    <!-- LEWY PANEL: formularz -->
     <aside class="left-panel">
       <h2>Parametry</h2>
-      <form id="simulation-form">
-        <label>N1 <input type="number" name="N1" value="10" /></label>
-        <label>N2 <input type="number" name="N2" value="10" /></label>
-        <label>T <input type="number" name="T" value="100" /></label>
-        <label>σ² <input type="number" step="0.1" name="sigma_squared" value="4.0" /></label>
-        <label>Liczba prób <input type="number" name="num_trials" value="10000" /></label>
-        <label>Bins <input type="number" name="bins" value="50" /></label>
+      <form id="simulation-form" class="sidebar-form">
 
-        <button type="submit">Generuj wykres</button>
+        <label class="form-label">
+          <span class="param-name tooltip">
+            N1
+            <span class="tooltiptext">Liczba wierszy macierzy o zadanym σ²_1</span>
+          </span>
+          <input type="number" name="N1" value="10" class="form-input" />
+        </label>
+
+        <label class="form-label">
+          <span class="param-name tooltip">
+            N2
+            <span class="tooltiptext">Liczba wierszy macierzy o zadanym σ²_2</span>
+          </span>
+          <input type="number" name="N2" value="10" class="form-input" />
+        </label>
+
+        <label class="form-label">
+          <span class="param-name tooltip">
+            T
+            <span class="tooltiptext">Liczba kolumn macierzy</span>
+          </span>
+          <input type="number" name="T" value="100" class="form-input" />
+        </label>
+
+        <label class="form-label">
+          <span class="param-name tooltip">
+            σ²
+            <span class="tooltiptext">Wariancja pierwszych N1 wierszy macierzy</span>
+          </span>
+          <input type="number" step="0.1" name="sigma_squared" value="4.0" class="form-input" />
+        </label>
+
+        <label class="form-label">
+          <span class="param-name tooltip">
+            n
+            <span class="tooltiptext">Liczba generowanych prób</span>
+          </span>
+          <input type="number" name="num_trials" value="10000" class="form-input" />
+        </label>
+
+        <label class="form-label">
+          <span class="param-name tooltip">
+            bins
+            <span class="tooltiptext">Liczba binów histogramu</span>
+          </span>
+          <input type="number" name="bins" value="50" class="form-input" />
+        </label>
+
+        <button type="submit" class="submit-button">Generuj wykres</button>
       </form>
     </aside>
 
-    <section class="right-panel">
+    <!-- ŚRODKOWY PANEL: wykres -->
+    <section class="center-panel">
       <canvas id="histogram-chart"></canvas>
-
-      <div class="stats">
-        <h3>Statystyki</h3>
-        <ul>
-          <li>Średnia λ: <span id="mean-lambda">–</span></li>
-          <li>Wariancja λ: <span id="var-lambda">–</span></li>
-          <li>Min λ: <span id="min-lambda">–</span></li>
-          <li>Max λ: <span id="max-lambda">–</span></li>
-        </ul>
-      </div>
     </section>
+
+    <!-- PRAWY PANEL: statystyki -->
+    <aside class="right-panel stats-container">
+      <h3 class="stats-title">Statystyki</h3>
+      <div class="stats-list">
+        <div class="stat-item"><span class="stat-label">Średnia λ:</span> <span id="mean-lambda" class="stat-value">–</span></div>
+        <div class="stat-item"><span class="stat-label">Wariancja λ:</span> <span id="var-lambda" class="stat-value">–</span></div>
+        <div class="stat-item"><span class="stat-label">Min λ:</span> <span id="min-lambda" class="stat-value">–</span></div>
+        <div class="stat-item"><span class="stat-label">Max λ:</span> <span id="max-lambda" class="stat-value">–</span></div>
+      </div>
+    </aside>
+
   </main>
 
-  <footer>
-    © 2025 EigenFlow – Chart.js + FastAPI
+  <footer class="page-footer">
+    © 2025 EigenViz Explorer – Chart.js + FastAPI
   </footer>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      feather.replace();
+    });
+  </script>
+  <script src="js/main.js"></script>
 </body>
 </html>

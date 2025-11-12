@@ -50,8 +50,20 @@ document.getElementById("simulation-form").addEventListener("submit", async (e) 
           delay: (context) => context.dataIndex * 10
         },
         scales: {
-          x: { title: { display: true, text: "Wartości" } },
-          y: { title: { display: true, text: "Częstość / Prawdopodobieństwo" } }
+          x: { 
+            title: { display: true, text: "Wartości" },
+            ticks: {
+              font: { size: 18 },
+              callback: value => Number(value).toPrecision(2)
+            }
+          },
+          y: { 
+            title: { display: true, text: "Częstość / Prawdopodobieństwo" },
+            ticks: {
+              font: { size: 18 },
+              callback: value => Number(value).toPrecision(2)
+            }
+          }
         },
         plugins: {
           legend: { position: "top" },
@@ -60,7 +72,6 @@ document.getElementById("simulation-form").addEventListener("submit", async (e) 
       }
     });
 
-    // aktualizacja statystyk
     document.getElementById("mean-lambda").textContent = json.stats.mean.toFixed(3);
     document.getElementById("var-lambda").textContent = json.stats.var.toFixed(3);
     document.getElementById("min-lambda").textContent = json.stats.min.toFixed(3);

@@ -6,8 +6,17 @@ document.addEventListener("DOMContentLoaded", () => {
   // -------------------------
   // Dodawanie nowych grup N_i i sigma_i²
   // -------------------------
+
   addBtn.addEventListener('click', () => {
-    const index = container.children.length + 1;
+    const rows = container.querySelectorAll('.group-row');
+
+    // Usuń przycisk "Usuń" z poprzedniej grupy
+    if (rows.length > 0) {
+      const prevRemoveBtn = rows[rows.length - 1].querySelector('.remove-btn');
+      if (prevRemoveBtn) prevRemoveBtn.remove();
+    }
+
+    const index = rows.length + 1;
     const div = document.createElement('div');
     div.className = 'group-row';
     div.style.display = 'flex';
@@ -17,8 +26,65 @@ document.addEventListener("DOMContentLoaded", () => {
       <label>N<sub>${index}</sub>: <input type="number" name="N_list" value="10" class="form-input" /></label>
       <label>σ<sub>${index}</sub><sup>2</sup>: <input type="number" step="0.1" name="sigma_squared_list" value="1.0" class="form-input" /></label>
     `;
+
+  // Dodaj przycisk "Usuń" do nowej grupy
+  addRemoveButton(div);
     container.appendChild(div);
+    updateIndexes();
   });
+
+  function updateIndexes() {
+    const rows = container.querySelectorAll('.group-row');
+    rows.forEach((row, i) => {
+      row.querySelector('label:first-child').innerHTML = `N<sub>${i+1}</sub>: <input type="number" name="N_list" value="10" class="form-input" />`;
+      row.querySelector('label:nth-child(2)').innerHTML = `σ<sub>${i+1}</sub><sup>2</sup>: <input type="number" step="0.1" name="sigma_squared_list" value="1.0" class="form-input" />`;
+    });
+  }
+
+  function addRemoveButton(row) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = 'Usuń';
+    btn.className = 'remove-btn';
+
+    // Kwadratowy przycisk z X
+    btn.textContent = 'X';
+    btn.style.width = '32px';
+    btn.style.height = '32px';
+    btn.style.padding = '0'; // usuwa padding, żeby był kwadratowy
+    btn.style.fontSize = '16px';
+    btn.style.backgroundColor = '#ff4d4f';
+    btn.style.color = 'white';
+    btn.style.border = 'none';
+    btn.style.borderRadius = '4px';
+    btn.style.cursor = 'pointer';
+    btn.style.display = 'inline-flex';
+    btn.style.alignItems = 'center';
+    btn.style.justifyContent = 'center';
+
+    btn.style.margin = '0 auto'; // automatyczne marginesy po bokach
+    btn.style.display = 'block'; // margin:auto działa tylko dla block
+    btn.style.marginTop = '8px';
+    
+    // Efekt po najechaniu
+    btn.addEventListener('mouseover', () => {
+      btn.style.backgroundColor = '#ff7875';
+    });
+    btn.addEventListener('mouseout', () => {
+      btn.style.backgroundColor = '#ff4d4f';
+    });
+
+    // Funkcja usuwania
+    btn.addEventListener('click', () => {
+      container.removeChild(row);
+      updateIndexes();
+
+      const newRows = container.querySelectorAll('.group-row');
+      if (newRows.length > 0) addRemoveButton(newRows[newRows.length - 1]);
+    });
+
+    row.appendChild(btn);
+  }
 
   // -------------------------
   // Obsługa submit formularza – wysyłka JSON
@@ -27,10 +93,16 @@ document.addEventListener("DOMContentLoaded", () => {
     e.preventDefault();
 
     // Pobranie danych z formularza
-    const N_list = Array.from(container.querySelectorAll('input[name="N_list"]'))
-      .map(i => parseInt(i.value) || 0);
-    const sigma_squared_list = Array.from(container.querySelectorAll('input[name="sigma_squared_list"]'))
-      .map(i => parseFloat(i.value) || 0);
+    const N_list = [];
+    const sigma_squared_list = [];
+
+    container.querySelectorAll('.group-row').forEach(row => {
+      const N = parseInt(row.querySelector('input[name="N_list"]').value);
+      const sigma = parseFloat(row.querySelector('input[name="sigma_squared_list"]').value);
+
+      N_list.push(N);
+      sigma_squared_list.push(sigma);
+    });
 
     const T = parseInt(form.querySelector('input[name="T"]').value) || 100;
     const num_trials = parseInt(form.querySelector('input[name="num_trials"]').value) || 10000;
@@ -116,6 +188,9 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("var-lambda").textContent = json.stats.var?.toFixed(3) ?? "–";
         document.getElementById("min-lambda").textContent = json.stats.min?.toFixed(3) ?? "–";
         document.getElementById("max-lambda").textContent = json.stats.max?.toFixed(3) ?? "–";
+        document.getElementById("elapsed_time").textContent = json.stats.elapsed_minutes?.toFixed(3) ?? "–";
+        document.getElementById("N_total").textContent = json.stats.N_total?.toFixed(3) ?? "–";
+        document.getElementById("r").textContent = json.stats.r?.toFixed(3) ?? "–";
       }
 
     } catch (err) {

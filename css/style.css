@@ -53,7 +53,8 @@ main {
    LEFT PANEL / FORM
 ========================= */
 .left-panel {
-    flex: 0 0 16%;
+    flex: 1 1 18%;
+    /* min-width: 1000px; */
     background-color: #fff;
     padding: 0.5rem;
     border-radius: 0.5rem;
@@ -66,11 +67,13 @@ main {
     text-align: center;
     padding: 8px 12px;
     margin-top: 8px;
+    margin-bottom: 12px;
     box-sizing: border-box;
 }
 
 .group-row {
     display: flex;
+    font-size: 22px;
     flex-direction: row;
     align-items: center;
     gap: 10px;
@@ -78,16 +81,18 @@ main {
 }
 
 .form-input {
-    width: 100px;
+    width: 70px;
+    font-size: 18px;
     padding: 4px 6px;
     box-sizing: border-box;
 }
 
 .single-row {
     display: flex;
+    font-size: 18px;
     flex-direction: row;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     margin-bottom: 8px;
 }
 
@@ -103,10 +108,11 @@ main {
 }
 
 .submit-button {
+    width: 100%;
     background-color: #154ca4;
     color: #fff;
     border: none;
-    padding: 0.5rem 0.75rem;
+    padding: 0.75rem 0.75rem;
     border-radius: 0.5rem;
     font-weight: 500;
     cursor: pointer;
@@ -168,7 +174,9 @@ main {
    CENTER PANEL / CHART
 ========================= */
 .center-panel {
-    flex: 1; /* zajmuje resztę miejsca */
+    flex: 2 1 72%; /* zajmuje resztę miejsca */
+    min-width: 900px; 
+    overflow: auto; 
     background-color: white;
     padding: 1rem;
     border-radius: 0.5rem;

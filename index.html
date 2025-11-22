@@ -19,14 +19,24 @@
 
     <!-- LEWY PANEL: formularz -->
     <aside class="left-panel">
-      <h2>Parametry</h2>
-
+      <h3 class="section-title">Parametry</h3>
       <form id="simulation-form">
-        <!-- Grupy N i sigma -->
+
         <div id="groups-container">
           <div class="group-row">
-            <label>N<sub>1</sub>: <input type="number" name="N_list" value="10" class="form-input" /></label>
-            <label>σ<sub>1</sub><sup>2</sup>: <input type="number" step="0.1" name="sigma_squared_list" value="1.0" class="form-input" /></label>
+
+            <label class="tooltip">
+              <span class="label-text">N<sub>1</sub>:</span>
+              <span class="tooltiptext">Liczba stopni swobody o odchyleniu standardowym σ<sub>1</sub>(&Sigma;N<sub>i</sub>&lt;40)</span>
+            </label>
+            <input type="number" name="N_list" value="10" class="form-input-a" />
+
+            <label class="tooltip">
+              <span class="label-text">σ<sub>1</sub><sup>2</sup>:</span>
+              <span class="tooltiptext">Wariancja N<sub>1</sub> wierszy macierzy losowej</span>
+            </label>
+            <input type="number" step="0.1" name="sigma_squared_list" value="1.0" class="form-input-a" />
+
           </div>
         </div>
 
@@ -34,20 +44,24 @@
           + Dodaj grupę
         </button>
 
-        <!-- Pozostałe parametry w kolumnie -->
-        <div>
-          <div class="single-row">
-            <label>T:</label>
-            <input type="number" name="T" value="100" class="form-input" />
-          </div>
-          <div class="single-row">
-            <label>num_trials:</label>
-            <input type="number" name="num_trials" value="10000" class="form-input" />
-          </div>
-          <div class="single-row">
-            <label>bins:</label>
-            <input type="number" name="bins" value="100" class="form-input" />
-          </div>
+        <div class="group-column">
+          <label class="tooltip">
+            <span class="label-text">T:</span>
+            <span class="tooltiptext">Liczba obserwacji</span>
+            <input type="number" name="T" value="100" class="form-input-b" />
+          </label>
+
+          <label class="tooltip">
+            <span class="label-text">n:</span>
+            <span class="tooltiptext">Liczba symulacji Monte Carlo</span>
+            <input type="number" name="num_trials" value="10000" class="form-input-b" />
+          </label>
+
+          <label class="tooltip">
+            <span class="label-text">bins:</span>
+            <span class="tooltiptext">Liczba binów generowanego histogramu</span>
+            <input type="number" name="bins" value="100" class="form-input-b" />
+          </label>
         </div>
 
         <button type="submit" class="submit-button">Generuj wykres</button>
@@ -63,17 +77,38 @@
 
     <!-- PRAWY PANEL: statystyki -->
     <aside class="right-panel stats-container">
-      <h3 class="stats-title">Statystyki</h3>
-      <div class="stats-list">
-        <div class="stat-item"><span class="stat-label">Średnia λ:</span> <span id="mean-lambda" class="stat-value">–</span></div>
-        <div class="stat-item"><span class="stat-label">Wariancja λ:</span> <span id="var-lambda" class="stat-value">–</span></div>
-        <div class="stat-item"><span class="stat-label">Min λ:</span> <span id="min-lambda" class="stat-value">–</span></div>
-        <div class="stat-item"><span class="stat-label">Max λ:</span> <span id="max-lambda" class="stat-value">–</span></div>
+      <!-- <h3 class="section-title">Statystyki</h3> -->
 
-        <div class="stat-item"><span class="stat-label">N<sub>max</sub>: </span> <span id="N_total" class="stat-value">–</span></div>
-        <div class="stat-item"><span class="stat-label">r: </span> <span id="r" class="stat-value">–</span></div>
-        <div class="stat-item"><span class="stat-label">Czas [s]: </span> <span id="elapsed_time" class="stat-value">–</span></div>
+      <h4 class="stats-type">Krzywa teoretyczna</h4>
+      <div class="stats-list">
+        <div class="stat-item"><span class="stat-label">Średnia λ</span> <span id="mean-lambda-teo" class="stat-value">–</span></div>
+        <div class="stat-item"><span class="stat-label">Wariancja λ</span> <span id="var-lambda-teo" class="stat-value">–</span></div>
+        <div class="stat-item"><span class="stat-label">Min λ</span> <span id="min-lambda-teo" class="stat-value">–</span></div>
+        <div class="stat-item"><span class="stat-label">Max λ</span> <span id="max-lambda-teo" class="stat-value">–</span></div>
+
+        <div class="stat-item"><span class="stat-label">Skośność</span> <span id="skosnosc-teo" class="stat-value">–</span></div>
+        <div class="stat-item"><span class="stat-label">Kurtoza</span> <span id="kurtoza-teo" class="stat-value">–</span></div>
       </div>
+
+      <h4 class="stats-type">Histogram</h4>
+      <div class="stats-list">
+        <div class="stat-item"><span class="stat-label">Średnia λ</span> <span id="mean-lambda-hist" class="stat-value">–</span></div>
+        <div class="stat-item"><span class="stat-label">Wariancja λ</span> <span id="var-lambda-hist" class="stat-value">–</span></div>
+        <div class="stat-item"><span class="stat-label">Min λ</span> <span id="min-lambda-hist" class="stat-value">–</span></div>
+        <div class="stat-item"><span class="stat-label">Max λ</span> <span id="max-lambda-hist" class="stat-value">–</span></div>
+
+        <div class="stat-item"><span class="stat-label">Skośność</span> <span id="skosnosc-hist" class="stat-value">–</span></div>
+        <div class="stat-item"><span class="stat-label">Kurtoza</span> <span id="kurtoza-hist" class="stat-value">–</span></div>
+      </div>
+
+      <h4 class="stats-type">Symulacja</h4>
+      <div class="stats-list">
+        <div class="stat-item"><span class="stat-label">N<sub>max</sub>: </span> <span id="N-total" class="stat-value">–</span></div>
+        <div class="stat-item"><span class="stat-label">λ<sub>max</sub>: </span> <span id="lambda-total" class="stat-value">–</span></div>
+        <div class="stat-item"><span class="stat-label">r </span> <span id="r-value" class="stat-value">–</span></div>
+        <div class="stat-item"><span class="stat-label">Czas [s] </span> <span id="elapsed-time" class="stat-value">–</span></div>
+      </div>
+
     </aside>
 
   </main>

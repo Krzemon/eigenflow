@@ -7,84 +7,118 @@ document.addEventListener("DOMContentLoaded", () => {
   // Dodawanie nowych grup N_i i sigma_i²
   // -------------------------
 
-  addBtn.addEventListener('click', () => {
-    const rows = container.querySelectorAll('.group-row');
-
-    // Usuń przycisk "Usuń" z poprzedniej grupy
-    if (rows.length > 0) {
-      const prevRemoveBtn = rows[rows.length - 1].querySelector('.remove-btn');
-      if (prevRemoveBtn) prevRemoveBtn.remove();
-    }
-
-    const index = rows.length + 1;
+  function createGroupRow(index) {
     const div = document.createElement('div');
     div.className = 'group-row';
-    div.style.display = 'flex';
-    div.style.gap = '10px';
-    div.style.marginBottom = '8px';
+
     div.innerHTML = `
-      <label>N<sub>${index}</sub>: <input type="number" name="N_list" value="10" class="form-input" /></label>
-      <label>σ<sub>${index}</sub><sup>2</sup>: <input type="number" step="0.1" name="sigma_squared_list" value="1.0" class="form-input" /></label>
-    `;
+      <label class="tooltip">
+        <span class="label-text">N<sub>${index}</sub>:</span>
+        <span class="tooltiptext">Liczba stopni swobody o odchyleniu standardowym σ<sub>${index}</sub>(&Sigma;N<sub>i</sub>&lt;40)</span>
+      </label>
+      <input type="number" name="N_list" value="10" class="form-input-a" />
 
-  // Dodaj przycisk "Usuń" do nowej grupy
-  addRemoveButton(div);
-    container.appendChild(div);
-    updateIndexes();
-  });
+      <label class="tooltip">
+        <span class="label-text">σ<sub>${index}</sub><sup>2</sup>:</span>
+        <span class="tooltiptext">Wariancja N<sub>${index}</sub> wierszy macierzy losowej</span>
+      </label>
+      <input type="number" step="0.1" name="sigma_squared_list" value="1.0" class="form-input-a" />
+      `;
 
-  function updateIndexes() {
-    const rows = container.querySelectorAll('.group-row');
-    rows.forEach((row, i) => {
-      row.querySelector('label:first-child').innerHTML = `N<sub>${i+1}</sub>: <input type="number" name="N_list" value="10" class="form-input" />`;
-      row.querySelector('label:nth-child(2)').innerHTML = `σ<sub>${i+1}</sub><sup>2</sup>: <input type="number" step="0.1" name="sigma_squared_list" value="1.0" class="form-input" />`;
-    });
+    return div;
   }
 
   function addRemoveButton(row) {
     const btn = document.createElement('button');
     btn.type = 'button';
-    btn.textContent = 'Usuń';
+    btn.textContent = 'X';
     btn.className = 'remove-btn';
 
-    // Kwadratowy przycisk z X
-    btn.textContent = 'X';
-    btn.style.width = '32px';
-    btn.style.height = '32px';
-    btn.style.padding = '0'; // usuwa padding, żeby był kwadratowy
+    btn.style.display = 'inline-flex';
+    btn.style.alignItems = 'center';
+    btn.style.justifyContent = 'center';
+    btn.style.width = '30px';
+    btn.style.height = '30px';
+    btn.style.padding = '0';
     btn.style.fontSize = '16px';
     btn.style.backgroundColor = '#ff4d4f';
     btn.style.color = 'white';
     btn.style.border = 'none';
     btn.style.borderRadius = '4px';
     btn.style.cursor = 'pointer';
-    btn.style.display = 'inline-flex';
-    btn.style.alignItems = 'center';
-    btn.style.justifyContent = 'center';
+    btn.style.marginLeft = '2px';
+    btn.style.marginTop = '0';
+    btn.style.alignSelf = 'flex-start';
 
-    btn.style.margin = '0 auto'; // automatyczne marginesy po bokach
-    btn.style.display = 'block'; // margin:auto działa tylko dla block
-    btn.style.marginTop = '8px';
-    
-    // Efekt po najechaniu
-    btn.addEventListener('mouseover', () => {
-      btn.style.backgroundColor = '#ff7875';
-    });
-    btn.addEventListener('mouseout', () => {
-      btn.style.backgroundColor = '#ff4d4f';
-    });
+    btn.addEventListener('mouseover', () => btn.style.backgroundColor = '#ff7875');
+    btn.addEventListener('mouseout', () => btn.style.backgroundColor = '#ff4d4f');
 
-    // Funkcja usuwania
     btn.addEventListener('click', () => {
+      const rows = container.querySelectorAll('.group-row');
+      if (rows.length <= 1) return; // NIE USUWAJ JEŚLI JEDNA GRUPA
+
       container.removeChild(row);
       updateIndexes();
-
-      const newRows = container.querySelectorAll('.group-row');
-      if (newRows.length > 0) addRemoveButton(newRows[newRows.length - 1]);
+      updateRemoveButtons();
     });
 
     row.appendChild(btn);
   }
+
+  function updateIndexes() {
+    const rows = container.querySelectorAll('.group-row');
+    rows.forEach((row, i) => {
+      const index = i + 1;
+      const labels = row.querySelectorAll('.tooltip');
+
+      labels[0].querySelector('.label-text').innerHTML = `N<sub>${index}</sub>:`; 
+      labels[0].querySelector('.tooltiptext').innerHTML =
+        `Liczba stopni swobody o odchyleniu standardowym σ<sub>${index}</sub>(&Sigma;N<sub>i</sub>&lt;40)`;
+      labels[1].querySelector('.label-text').innerHTML = `σ<sub>${index}</sub><sup>2</sup>:`; 
+      labels[1].querySelector('.tooltiptext').innerHTML =
+        `Wariancja N<sub>${index}</sub> wierszy macierzy losowej`;
+    });
+  }
+
+  // nowa funkcja sterująca widocznością przycisków
+  function updateRemoveButtons() {
+    const rows = container.querySelectorAll('.group-row');
+    
+    rows.forEach((row, i) => {
+      let btn = row.querySelector('.remove-btn');
+
+      // Jeśli brak przycisku i to ostatnia grupa i liczba grup >= 2 → dodaj
+      if (!btn && rows.length > 1 && i === rows.length - 1) {
+        addRemoveButton(row);
+        btn = row.querySelector('.remove-btn');
+      }
+
+      // Pokazuj przycisk tylko dla ostatniej grupy jeśli jest co najmniej 2 grupy
+      if (btn) {
+        if (rows.length <= 1 || i !== rows.length - 1) {
+          btn.style.display = 'none';
+        } else {
+          btn.style.display = 'inline-flex';
+        }
+      }
+    });
+  }
+
+  // obsługa przycisku dodawania
+  addBtn.addEventListener('click', () => {
+    const rows = container.querySelectorAll('.group-row');
+    if (rows.length >= 9) return; // limit 20 grup widocznych
+
+    const index = rows.length + 1;
+    const newRow = createGroupRow(index);
+
+    container.appendChild(newRow);
+    updateIndexes();
+    updateRemoveButtons();
+  });
+
+  // uruchamiamy przy starcie, aby przycisk X był ukryty jeśli jedna grupa
+  updateRemoveButtons();
 
   // -------------------------
   // Obsługa submit formularza – wysyłka JSON
@@ -170,8 +204,14 @@ document.addEventListener("DOMContentLoaded", () => {
           responsive: true,
           maintainAspectRatio: false,
           scales: {
-            x: { type: "linear", title: { display: true, text: "Wartości" } },
-            y: { title: { display: true, text: "Częstość / Prawdopodobieństwo" } }
+            x: { type: "linear",
+                title: { display: true, text: "Wartości własne λ", font: {size: 22} },
+                ticks: { font: { size: 18 } }
+              },
+            y: {
+                title: { display: true, text: "Gęstość prawdopodobieństwa", font: {size: 22} },
+                ticks: { font: { size: 18 } }
+              }
           },
           plugins: {
             legend: { position: "top" },
@@ -184,13 +224,23 @@ document.addEventListener("DOMContentLoaded", () => {
       // Aktualizacja statystyk
       // -------------------------
       if (json.stats) {
-        document.getElementById("mean-lambda").textContent = json.stats.mean?.toFixed(3) ?? "–";
-        document.getElementById("var-lambda").textContent = json.stats.var?.toFixed(3) ?? "–";
-        document.getElementById("min-lambda").textContent = json.stats.min?.toFixed(3) ?? "–";
-        document.getElementById("max-lambda").textContent = json.stats.max?.toFixed(3) ?? "–";
-        document.getElementById("elapsed_time").textContent = json.stats.elapsed_minutes?.toFixed(3) ?? "–";
-        document.getElementById("N_total").textContent = json.stats.N_total?.toFixed(3) ?? "–";
-        document.getElementById("r").textContent = json.stats.r?.toFixed(3) ?? "–";
+        document.getElementById("mean-lambda-teo").textContent = json.stats.mean_teo?.toFixed(3) ?? "–";
+        document.getElementById("var-lambda-teo").textContent = json.stats.var_teo?.toFixed(3) ?? "–";
+        document.getElementById("min-lambda-teo").textContent = json.stats.min_teo?.toFixed(3) ?? "–";
+        document.getElementById("max-lambda-teo").textContent = json.stats.max_teo?.toFixed(3) ?? "–";
+        document.getElementById("skosnosc-teo").textContent = json.stats.skewness_teo?.toFixed(3) ?? "–";
+        document.getElementById("kurtoza-teo").textContent = json.stats.kurtosis_teo?.toFixed(3) ?? "–";
+
+        document.getElementById("mean-lambda-hist").textContent = json.stats.mean_hist?.toFixed(3) ?? "–";
+        document.getElementById("var-lambda-hist").textContent = json.stats.var_hist?.toFixed(3) ?? "–";
+        document.getElementById("min-lambda-hist").textContent = json.stats.min_hist?.toFixed(3) ?? "–";
+        document.getElementById("max-lambda-hist").textContent = json.stats.max_hist?.toFixed(3) ?? "–";
+        document.getElementById("skosnosc-hist").textContent = json.stats.skewness_hist?.toFixed(3) ?? "–";
+        document.getElementById("kurtoza-hist").textContent = json.stats.kurtosis_hist?.toFixed(3) ?? "–";
+
+        document.getElementById("elapsed_time").textContent = json.stats.elapsed_minutes?.toFixed(1) ?? "–";
+        document.getElementById("N_total").textContent = json.stats.N_total?.toFixed(0) ?? "–";
+        document.getElementById("r").textContent = json.stats.r?.toFixed(2) ?? "–";
       }
 
     } catch (err) {

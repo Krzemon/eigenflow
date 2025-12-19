@@ -2,6 +2,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const container = document.getElementById('groups-container');
   const addBtn = document.getElementById('add-group');
   const form = document.getElementById("simulation-form");
+  const windowSelect = document.getElementById("window-select");
+  
+  let allStats = {};
 
   // -------------------------
   // Dodawanie nowych grup N_i i sigma_i²
@@ -107,7 +110,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // obsługa przycisku dodawania
   addBtn.addEventListener('click', () => {
     const rows = container.querySelectorAll('.group-row');
-    if (rows.length >= 9) return; // limit 20 grup widocznych
+    if (rows.length >= 8) return; // limit grup
 
     const index = rows.length + 1;
     const newRow = createGroupRow(index);
@@ -120,6 +123,98 @@ document.addEventListener("DOMContentLoaded", () => {
   // uruchamiamy przy starcie, aby przycisk X był ukryty jeśli jedna grupa
   updateRemoveButtons();
 
+
+
+
+
+  function updateWindowSelect() {
+    if (!windowSelect) return;
+
+    const groupRows = container.querySelectorAll('.group-row');
+
+    // Czyść stare opcje
+    windowSelect.innerHTML = "";
+
+    // Subscript helper
+    const subscriptMap = ['₀','₁','₂','₃','₄','₅','₆','₇','₈','₉'];
+    const getSubscript = (n) => n.toString().split('').map(d => subscriptMap[d]).join('');
+
+    // Domyślna opcja σ₁²
+    const defaultOption = document.createElement("option");
+    defaultOption.value = 0;
+    defaultOption.textContent = `σ${getSubscript(1)}²`;
+    defaultOption.selected = true;
+    windowSelect.appendChild(defaultOption);
+
+    // Opcje dla pozostałych grup (jeśli więcej niż 1)
+    groupRows.forEach((row, i) => {
+      if (i === 0) return; // pierwsza grupa już w domyślnej opcji
+      const option = document.createElement("option");
+      option.value = i; // indeks w allStats
+      option.textContent = `σ${getSubscript(i + 1)}²`; // i+1 bo pierwsza grupa to σ₁²
+      windowSelect.appendChild(option);
+    });
+  }
+
+  // funkcja aktualizująca statystyki – teraz może działać bez indeksu
+  function updateStatsForGroup(index) {
+    // jeśli allStats nie istnieje, wyjdź
+    if (!allStats) return;
+
+    // Dla testu – wszystkie grupy mają te same statystyki, więc ignorujemy index
+    const stats = allStats;
+
+    const setText = (id, value) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = value ?? "–";
+    };
+
+    // Krzywa teoretyczna
+    if (stats.theo_stats) {
+      setText("mean-theo", stats.theo_stats.mean?.toFixed(3));
+      setText("var-theo", stats.theo_stats.var?.toFixed(3));
+      setText("skew-theo", stats.theo_stats.skew?.toFixed(3));
+      setText("kurt-theo", stats.theo_stats.kurt?.toFixed(3));
+      setText("min-theo", stats.theo_stats.min?.toFixed(3));
+      setText("max-theo", stats.theo_stats.max?.toFixed(3));
+    }
+
+    // Histogram
+    if (stats.hist_stats) {
+      setText("mean-hist", stats.hist_stats.mean?.toFixed(3));
+      setText("var-hist", stats.hist_stats.var?.toFixed(3));
+      setText("skew-hist", stats.hist_stats.skew?.toFixed(3));
+      setText("kurt-hist", stats.hist_stats.kurt?.toFixed(3));
+      setText("min-hist", stats.hist_stats.min?.toFixed(3));
+      setText("max-hist", stats.hist_stats.max?.toFixed(3));
+    }
+
+    // Symulacja
+    if (stats.other_stats) {
+      setText("N-total", stats.other_stats.N_total?.toFixed(0));
+      setText("r-value", stats.other_stats.r?.toFixed(2));
+      setText("time", stats.other_stats.time?.toFixed(1));
+    }
+  }
+
+  if (windowSelect) {
+    windowSelect.addEventListener("change", (e) => {
+      const selectedIndex = parseInt(e.target.value);
+      if (!isNaN(selectedIndex)) {
+        updateStatsForGroup(selectedIndex);
+      }
+    });
+  }
+
+  // Wywołanie przy starcie
+  updateWindowSelect();
+
+  // Obserwator do dynamicznych zmian grup
+  const observer = new MutationObserver(() => updateWindowSelect());
+  observer.observe(container, { childList: true });
+
+
+
   // -------------------------
   // Obsługa submit formularza – wysyłka JSON
   // -------------------------
@@ -131,18 +226,17 @@ document.addEventListener("DOMContentLoaded", () => {
     const sigma_squared_list = [];
 
     container.querySelectorAll('.group-row').forEach(row => {
-      const N = parseInt(row.querySelector('input[name="N_list"]').value);
-      const sigma = parseFloat(row.querySelector('input[name="sigma_squared_list"]').value);
-
-      N_list.push(N);
-      sigma_squared_list.push(sigma);
+      N_list.push(parseInt(row.querySelector('input[name="N_list"]').value));
+      sigma_squared_list.push(parseFloat(row.querySelector('input[name="sigma_squared_list"]').value));
     });
 
     const T = parseInt(form.querySelector('input[name="T"]').value) || 100;
     const num_trials = parseInt(form.querySelector('input[name="num_trials"]').value) || 10000;
     const bins = parseInt(form.querySelector('input[name="bins"]').value) || 50;
+    const distSelect = form.querySelector('select[name="dist_name"]');
+    const dist_name = distSelect.value;
 
-    const payload = { N_list, sigma_squared_list, T, num_trials, bins };
+    const payload = { N_list, sigma_squared_list, T, num_trials, dist_name, bins };
 
     try {
       const response = await fetch("http://localhost:8000/mp/plot", {
@@ -157,6 +251,15 @@ document.addEventListener("DOMContentLoaded", () => {
         console.error("Błąd z backendu:", json.error);
         return;
       }
+
+
+
+
+      // po otrzymaniu danych z backendu
+      allStats = json;  // tu przypisujesz całe json, np. json.theo_stats, json.hist_stats, json.other_stats
+      updateStatsForGroup(); // od razu aktualizacja na stronie
+
+
 
       const ctx = document.getElementById("histogram-chart").getContext("2d");
       if (window.currentChart) window.currentChart.destroy();
@@ -223,25 +326,29 @@ document.addEventListener("DOMContentLoaded", () => {
       // -------------------------
       // Aktualizacja statystyk
       // -------------------------
-      if (json.stats) {
-        document.getElementById("mean-lambda-teo").textContent = json.stats.mean_teo?.toFixed(3) ?? "–";
-        document.getElementById("var-lambda-teo").textContent = json.stats.var_teo?.toFixed(3) ?? "–";
-        document.getElementById("min-lambda-teo").textContent = json.stats.min_teo?.toFixed(3) ?? "–";
-        document.getElementById("max-lambda-teo").textContent = json.stats.max_teo?.toFixed(3) ?? "–";
-        document.getElementById("skosnosc-teo").textContent = json.stats.skewness_teo?.toFixed(3) ?? "–";
-        document.getElementById("kurtoza-teo").textContent = json.stats.kurtosis_teo?.toFixed(3) ?? "–";
+      // if (json.theo_stats) {
+      //   document.getElementById("mean-theo").textContent = json.theo_stats.mean?.toFixed(3) ?? "–";
+      //   document.getElementById("var-theo").textContent = json.theo_stats.var?.toFixed(3) ?? "–";
+      //   document.getElementById("skew-theo").textContent = json.theo_stats.skew?.toFixed(3) ?? "–";
+      //   document.getElementById("kurt-theo").textContent = json.theo_stats.kurt?.toFixed(3) ?? "–";
+      //   document.getElementById("min-theo").textContent = json.theo_stats.min?.toFixed(3) ?? "–";
+      //   document.getElementById("max-theo").textContent = json.theo_stats.max?.toFixed(3) ?? "–";
+      // }
 
-        document.getElementById("mean-lambda-hist").textContent = json.stats.mean_hist?.toFixed(3) ?? "–";
-        document.getElementById("var-lambda-hist").textContent = json.stats.var_hist?.toFixed(3) ?? "–";
-        document.getElementById("min-lambda-hist").textContent = json.stats.min_hist?.toFixed(3) ?? "–";
-        document.getElementById("max-lambda-hist").textContent = json.stats.max_hist?.toFixed(3) ?? "–";
-        document.getElementById("skosnosc-hist").textContent = json.stats.skewness_hist?.toFixed(3) ?? "–";
-        document.getElementById("kurtoza-hist").textContent = json.stats.kurtosis_hist?.toFixed(3) ?? "–";
+      // if (json.hist_stats) {
+      //   document.getElementById("mean-hist").textContent = json.hist_stats.mean?.toFixed(3) ?? "–";
+      //   document.getElementById("var-hist").textContent = json.hist_stats.var?.toFixed(3) ?? "–";
+      //   document.getElementById("skew-hist").textContent = json.hist_stats.skew?.toFixed(3) ?? "–";
+      //   document.getElementById("kurt-hist").textContent = json.hist_stats.kurt?.toFixed(3) ?? "–";
+      //   document.getElementById("min-hist").textContent = json.hist_stats.min?.toFixed(3) ?? "–";
+      //   document.getElementById("max-hist").textContent = json.hist_stats.max?.toFixed(3) ?? "–";
+      // }
 
-        document.getElementById("elapsed_time").textContent = json.stats.elapsed_minutes?.toFixed(1) ?? "–";
-        document.getElementById("N_total").textContent = json.stats.N_total?.toFixed(0) ?? "–";
-        document.getElementById("r").textContent = json.stats.r?.toFixed(2) ?? "–";
-      }
+      // if (json.other_stats) {
+      //   document.getElementById("N-total").textContent = json.other_stats.N_total?.toFixed(0) ?? "–";
+      //   document.getElementById("r-value").textContent = json.other_stats.r?.toFixed(2) ?? "–";
+      //   document.getElementById("time").textContent = json.other_stats.time?.toFixed(1) ?? "–";
+      // }
 
     } catch (err) {
       console.error("Błąd przy generowaniu wykresu:", err);

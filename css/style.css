@@ -64,7 +64,9 @@ main {
 .add-button {
     display: block;
     width: 100%;
+    font-size: 1.15rem;
     text-align: center;
+    font-weight: bold;
     padding: 8px 12px;
     margin-top: 8px;
     margin-bottom: 12px;
@@ -111,14 +113,22 @@ main {
 }
 
 .form-input {
-    font-size: 18px;
+    /* font-size: 20px; */
     padding: 4px 6px;
     box-sizing: border-box;
     width: auto; /* domyślna szerokość */
 }
 
 .form-input-a { width: 60px !important; }
-.form-input-b { width: 100px !important; }
+.form-input-b { width: 140px !important; font-size: 18px;}
+
+#dist-select {
+    width: 150px;
+    box-sizing: border-box;
+    display: block;     /* żeby width działało w flexboxie */
+    font-size: 1rem; /* jeśli chcesz większy tekst, np. 125% */
+    padding: 6px 8px;   /* dopasowanie paddingu do inputów */
+}
 
 .single-row {
     display: flex;
@@ -148,12 +158,12 @@ main {
     border: none;
     padding: 0.75rem 0.75rem;
     border-radius: 0.5rem;
-    font-weight: 500;
+    font-weight: bold;
     cursor: pointer;
     display: flex;
     justify-content: center;
     gap: 0.5rem;
-    font-size: 1rem;
+    font-size: 1.15rem;
     transition: background-color 0.2s;
 }
 
@@ -165,10 +175,9 @@ main {
 .tooltip {
   position: relative;      /* konieczne dla absolutnego pozycjonowania chmurki */
   cursor: help;
-  color: #246004;
-  font-size: 1.2rem;
+  color: #010f3d;
+  font-size: 1.3rem;
   font-weight: bold;
-
   display: inline-flex;    /* label + input w jednej linii */
   align-items: center;
   gap: 8px;
@@ -269,8 +278,8 @@ canvas {
 }
 
 .stats-type {
-    font-size: 1.2rem;
-    font-weight: 550;
+    font-size: 1.1rem;
+    font-weight: 650;
     color: #16407a;
     margin: 0 0 0 0;
 }
@@ -301,6 +310,45 @@ canvas {
     color: #1f2937;
 }
 
+/* Kontener label + select w jednej linii */
+.window-select-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    width: 100%;            /* kontener zajmuje całą szerokość */
+}
+
+/* Label */
+.window-select-label {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0;
+    flex-shrink: 0;         /* nie kurczy się */
+}
+
+/* Select */
+.window-select {
+    height: 1.8em;          /* 2× wysokość domyślnej czcionki (em = rozmiar fontu) */
+    font-size: 1rem;
+    padding: 0 6px;
+    border: 1px solid #ccc;
+    border-radius: 0.25rem;
+    background-color: #fff;
+    color: #111;
+    box-sizing: border-box;
+    cursor: pointer;
+
+    flex: 1 1 auto;         /* zajmuje całą dostępną szerokość kontenera */
+}
+
+.window-select:hover,
+.window-select:focus {
+    border-color: #2563eb;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+}
 /* =========================
    FOOTER
 ========================= */

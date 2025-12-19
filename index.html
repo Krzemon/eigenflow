@@ -52,15 +52,30 @@
           </label>
 
           <label class="tooltip">
-            <span class="label-text">n:</span>
+            <span class="label-text">Próby:</span>
             <span class="tooltiptext">Liczba symulacji Monte Carlo</span>
             <input type="number" name="num_trials" value="10000" class="form-input-b" />
           </label>
 
           <label class="tooltip">
-            <span class="label-text">bins:</span>
+            <span class="label-text">Biny:</span>
             <span class="tooltiptext">Liczba binów generowanego histogramu</span>
             <input type="number" name="bins" value="100" class="form-input-b" />
+          </label>
+
+
+          <label class="tooltip">
+            <span class="label-text">Rozkład:</span>
+            <span class="tooltiptext">Wybierz rozkład generowanych danych</span>
+            <select name="dist_name" id="dist-select">
+              <option value="normal">Normalny</option>
+              <option value="uniform">Jednostajny</option>
+              <option value="exponential">Wykładniczy</option>
+              <option value="cauchy">Cauchy’ego</option>
+              <option value="log-normal">Log-normalny</option>
+              <option value="bernoulli">Bernoulliego</option>
+              <option value="t-Student">t-Studenta</option>
+            </select>
           </label>
         </div>
 
@@ -79,34 +94,44 @@
     <aside class="right-panel stats-container">
       <!-- <h3 class="section-title">Statystyki</h3> -->
 
+      <!-- SELECTOR NA GÓRZE -->  
+      <!-- <div class="window-select-container">
+        <label for="window-select" class="window-select-label">Wybierz grupę:</label>
+        <select id="window-select" class="window-select"></select>
+      </div> -->
+      <div class="window-select-container">
+        <label for="window-select" class="window-select-label">Wybierz grupę:</label>
+        <select id="window-select" class="window-select">
+          <option value="" selected>σ₁²</option>
+        </select>
+      </div>
+
+
       <h4 class="stats-type">Krzywa teoretyczna</h4>
       <div class="stats-list">
-        <div class="stat-item"><span class="stat-label">Średnia λ</span> <span id="mean-lambda-teo" class="stat-value">–</span></div>
-        <div class="stat-item"><span class="stat-label">Wariancja λ</span> <span id="var-lambda-teo" class="stat-value">–</span></div>
-        <div class="stat-item"><span class="stat-label">Min λ</span> <span id="min-lambda-teo" class="stat-value">–</span></div>
-        <div class="stat-item"><span class="stat-label">Max λ</span> <span id="max-lambda-teo" class="stat-value">–</span></div>
-
-        <div class="stat-item"><span class="stat-label">Skośność</span> <span id="skosnosc-teo" class="stat-value">–</span></div>
-        <div class="stat-item"><span class="stat-label">Kurtoza</span> <span id="kurtoza-teo" class="stat-value">–</span></div>
+        <div class="stat-item"><span class="stat-label">Średnia</span> <span id="mean-theo" class="stat-value">–</span></div>
+        <div class="stat-item"><span class="stat-label">Wariancja</span> <span id="var-theo" class="stat-value">–</span></div>
+        <div class="stat-item"><span class="stat-label">Skośność</span> <span id="skew-theo" class="stat-value">–</span></div>
+        <div class="stat-item"><span class="stat-label">Kurtoza</span> <span id="kurt-theo" class="stat-value">–</span></div>
+        <div class="stat-item"><span class="stat-label">Min λ</span> <span id="min-theo" class="stat-value">–</span></div>
+        <div class="stat-item"><span class="stat-label">Max λ</span> <span id="max-theo" class="stat-value">–</span></div>
       </div>
 
       <h4 class="stats-type">Histogram</h4>
       <div class="stats-list">
-        <div class="stat-item"><span class="stat-label">Średnia λ</span> <span id="mean-lambda-hist" class="stat-value">–</span></div>
-        <div class="stat-item"><span class="stat-label">Wariancja λ</span> <span id="var-lambda-hist" class="stat-value">–</span></div>
-        <div class="stat-item"><span class="stat-label">Min λ</span> <span id="min-lambda-hist" class="stat-value">–</span></div>
-        <div class="stat-item"><span class="stat-label">Max λ</span> <span id="max-lambda-hist" class="stat-value">–</span></div>
-
-        <div class="stat-item"><span class="stat-label">Skośność</span> <span id="skosnosc-hist" class="stat-value">–</span></div>
-        <div class="stat-item"><span class="stat-label">Kurtoza</span> <span id="kurtoza-hist" class="stat-value">–</span></div>
+        <div class="stat-item"><span class="stat-label">Średnia</span> <span id="mean-hist" class="stat-value">–</span></div>
+        <div class="stat-item"><span class="stat-label">Wariancja</span> <span id="var-hist" class="stat-value">–</span></div>
+        <div class="stat-item"><span class="stat-label">Skośność</span> <span id="skew-hist" class="stat-value">–</span></div>
+        <div class="stat-item"><span class="stat-label">Kurtoza</span> <span id="kurt-hist" class="stat-value">–</span></div>
+        <div class="stat-item"><span class="stat-label">Min λ</span> <span id="min-hist" class="stat-value">–</span></div>
+        <div class="stat-item"><span class="stat-label">Max λ</span> <span id="max-hist" class="stat-value">–</span></div>
       </div>
 
       <h4 class="stats-type">Symulacja</h4>
       <div class="stats-list">
-        <div class="stat-item"><span class="stat-label">N<sub>max</sub>: </span> <span id="N-total" class="stat-value">–</span></div>
-        <div class="stat-item"><span class="stat-label">λ<sub>max</sub>: </span> <span id="lambda-total" class="stat-value">–</span></div>
+        <div class="stat-item"><span class="stat-label">N<sub>total</sub>: </span> <span id="N-total" class="stat-value">–</span></div>
         <div class="stat-item"><span class="stat-label">r </span> <span id="r-value" class="stat-value">–</span></div>
-        <div class="stat-item"><span class="stat-label">Czas [s] </span> <span id="elapsed-time" class="stat-value">–</span></div>
+        <div class="stat-item"><span class="stat-label">Czas [s] </span> <span id="time" class="stat-value">–</span></div>
       </div>
 
     </aside>

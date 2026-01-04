@@ -71,19 +71,16 @@
               <option value="normal">Normalny</option>
               <option value="uniform">Jednostajny</option>
               <option value="exponential">Wykładniczy</option>
-              <option value="cauchy">Cauchy’ego</option>
-              <option value="log-normal">Log-normalny</option>
               <option value="bernoulli">Bernoulliego</option>
-              <option value="t-Student">t-Studenta</option>
             </select>
           </label>
         </div>
 
         <button type="submit" class="submit-button">Generuj wykres</button>
       </form>
-    </aside>
 
-    <!-- <script src="js/main.js"></script> -->
+      <div id="nt-error" class="nt-error"></div>
+    </aside>
 
     <!-- ŚRODKOWY PANEL: wykres -->
     <section class="center-panel">
@@ -92,20 +89,6 @@
 
     <!-- PRAWY PANEL: statystyki -->
     <aside class="right-panel stats-container">
-      <!-- <h3 class="section-title">Statystyki</h3> -->
-
-      <!-- SELECTOR NA GÓRZE -->  
-      <!-- <div class="window-select-container">
-        <label for="window-select" class="window-select-label">Wybierz grupę:</label>
-        <select id="window-select" class="window-select"></select>
-      </div> -->
-      <div class="window-select-container">
-        <label for="window-select" class="window-select-label">Wybierz grupę:</label>
-        <select id="window-select" class="window-select">
-          <option value="" selected>σ₁²</option>
-        </select>
-      </div>
-
 
       <h4 class="stats-type">Krzywa teoretyczna</h4>
       <div class="stats-list">

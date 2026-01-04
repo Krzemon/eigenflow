@@ -2,13 +2,42 @@ document.addEventListener("DOMContentLoaded", () => {
   const container = document.getElementById('groups-container');
   const addBtn = document.getElementById('add-group');
   const form = document.getElementById("simulation-form");
-  const windowSelect = document.getElementById("window-select");
-  
-  let allStats = {};
+  const errorBox = document.getElementById("nt-error");
 
-  // -------------------------
-  // Dodawanie nowych grup N_i i sigma_i²
-  // -------------------------
+  /* =======================
+     N / T – WALIDACJA
+  ======================= */
+
+  function getTotalN() {
+    return [...container.querySelectorAll('input[name="N_list"]')]
+      .map(el => Number(el.value) || 0)
+      .reduce((a, b) => a + b, 0);
+  }
+
+  function getT() {
+    const tInput = form.querySelector('input[name="T"]');
+    return Number(tInput.value) || 0;
+  }
+
+  function validateNT() {
+    const totalN = getTotalN();
+    const T = getT();
+
+    if (totalN > T) {
+      errorBox.textContent =
+        // `BŁĄD: ΣN = ${totalN} > T = ${T}. Wymagane: T ≥ ΣN (r ≤ 1).`;
+        'BŁĄD; Rozkład generuje się dla 0 < r <= 1, gdzie r = N/T';
+      errorBox.style.display = "block";
+      return false;
+    }
+
+    errorBox.style.display = "none";
+    return true;
+  }
+
+  /* =======================
+     GRUPY
+  ======================= */
 
   function createGroupRow(index) {
     const div = document.createElement('div');
@@ -123,103 +152,26 @@ document.addEventListener("DOMContentLoaded", () => {
   // uruchamiamy przy starcie, aby przycisk X był ukryty jeśli jedna grupa
   updateRemoveButtons();
 
+  /* =======================
+     REAKCJA NA ZMIANY
+  ======================= */
 
-
-
-
-  function updateWindowSelect() {
-    if (!windowSelect) return;
-
-    const groupRows = container.querySelectorAll('.group-row');
-
-    // Czyść stare opcje
-    windowSelect.innerHTML = "";
-
-    // Subscript helper
-    const subscriptMap = ['₀','₁','₂','₃','₄','₅','₆','₇','₈','₉'];
-    const getSubscript = (n) => n.toString().split('').map(d => subscriptMap[d]).join('');
-
-    // Domyślna opcja σ₁²
-    const defaultOption = document.createElement("option");
-    defaultOption.value = 0;
-    defaultOption.textContent = `σ${getSubscript(1)}²`;
-    defaultOption.selected = true;
-    windowSelect.appendChild(defaultOption);
-
-    // Opcje dla pozostałych grup (jeśli więcej niż 1)
-    groupRows.forEach((row, i) => {
-      if (i === 0) return; // pierwsza grupa już w domyślnej opcji
-      const option = document.createElement("option");
-      option.value = i; // indeks w allStats
-      option.textContent = `σ${getSubscript(i + 1)}²`; // i+1 bo pierwsza grupa to σ₁²
-      windowSelect.appendChild(option);
-    });
-  }
-
-  // funkcja aktualizująca statystyki – teraz może działać bez indeksu
-  function updateStatsForGroup(index) {
-    // jeśli allStats nie istnieje, wyjdź
-    if (!allStats) return;
-
-    // Dla testu – wszystkie grupy mają te same statystyki, więc ignorujemy index
-    const stats = allStats;
-
-    const setText = (id, value) => {
-      const el = document.getElementById(id);
-      if (el) el.textContent = value ?? "–";
-    };
-
-    // Krzywa teoretyczna
-    if (stats.theo_stats) {
-      setText("mean-theo", stats.theo_stats.mean?.toFixed(3));
-      setText("var-theo", stats.theo_stats.var?.toFixed(3));
-      setText("skew-theo", stats.theo_stats.skew?.toFixed(3));
-      setText("kurt-theo", stats.theo_stats.kurt?.toFixed(3));
-      setText("min-theo", stats.theo_stats.min?.toFixed(3));
-      setText("max-theo", stats.theo_stats.max?.toFixed(3));
+  form.addEventListener("input", (e) => {
+    if (e.target.name === "N_list" || e.target.name === "T") {
+      validateNT();
     }
+  });
 
-    // Histogram
-    if (stats.hist_stats) {
-      setText("mean-hist", stats.hist_stats.mean?.toFixed(3));
-      setText("var-hist", stats.hist_stats.var?.toFixed(3));
-      setText("skew-hist", stats.hist_stats.skew?.toFixed(3));
-      setText("kurt-hist", stats.hist_stats.kurt?.toFixed(3));
-      setText("min-hist", stats.hist_stats.min?.toFixed(3));
-      setText("max-hist", stats.hist_stats.max?.toFixed(3));
-    }
-
-    // Symulacja
-    if (stats.other_stats) {
-      setText("N-total", stats.other_stats.N_total?.toFixed(0));
-      setText("r-value", stats.other_stats.r?.toFixed(2));
-      setText("time", stats.other_stats.time?.toFixed(1));
-    }
-  }
-
-  if (windowSelect) {
-    windowSelect.addEventListener("change", (e) => {
-      const selectedIndex = parseInt(e.target.value);
-      if (!isNaN(selectedIndex)) {
-        updateStatsForGroup(selectedIndex);
-      }
-    });
-  }
-
-  // Wywołanie przy starcie
-  updateWindowSelect();
-
-  // Obserwator do dynamicznych zmian grup
-  const observer = new MutationObserver(() => updateWindowSelect());
-  observer.observe(container, { childList: true });
-
-
-
-  // -------------------------
-  // Obsługa submit formularza – wysyłka JSON
-  // -------------------------
+  /* =======================
+     SUBMIT
+  ======================= */
+  
   form.addEventListener("submit", async (e) => {
-    e.preventDefault();
+    e.preventDefault();          // ZAWSZE blokujemy domyślny submit
+
+    if (!validateNT()) {         // jeśli ΣN > T
+      return;                    // wyjdź — NIC się nie rysuje
+    }
 
     // Pobranie danych z formularza
     const N_list = [];
@@ -252,21 +204,9 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-
-
-
-      // po otrzymaniu danych z backendu
-      allStats = json;  // tu przypisujesz całe json, np. json.theo_stats, json.hist_stats, json.other_stats
-      updateStatsForGroup(); // od razu aktualizacja na stronie
-
-
-
       const ctx = document.getElementById("histogram-chart").getContext("2d");
       if (window.currentChart) window.currentChart.destroy();
 
-      // -------------------------
-      // Tworzenie datasets
-      // -------------------------
       const datasets = [
         {
           type: "bar",
@@ -294,9 +234,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
       }
 
-      // -------------------------
-      // Tworzenie wykresu
-      // -------------------------
       window.currentChart = new Chart(ctx, {
         type: "bar",
         data: {
@@ -323,32 +260,29 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       });
 
-      // -------------------------
-      // Aktualizacja statystyk
-      // -------------------------
-      // if (json.theo_stats) {
-      //   document.getElementById("mean-theo").textContent = json.theo_stats.mean?.toFixed(3) ?? "–";
-      //   document.getElementById("var-theo").textContent = json.theo_stats.var?.toFixed(3) ?? "–";
-      //   document.getElementById("skew-theo").textContent = json.theo_stats.skew?.toFixed(3) ?? "–";
-      //   document.getElementById("kurt-theo").textContent = json.theo_stats.kurt?.toFixed(3) ?? "–";
-      //   document.getElementById("min-theo").textContent = json.theo_stats.min?.toFixed(3) ?? "–";
-      //   document.getElementById("max-theo").textContent = json.theo_stats.max?.toFixed(3) ?? "–";
-      // }
+      if (json.theo_stats) {
+        document.getElementById("mean-theo").textContent = json.theo_stats.mean?.toFixed(3) ?? "–";
+        document.getElementById("var-theo").textContent = json.theo_stats.variance?.toFixed(3) ?? "–";
+        document.getElementById("skew-theo").textContent = json.theo_stats.skewness?.toFixed(3) ?? "–";
+        document.getElementById("kurt-theo").textContent = json.theo_stats.kurtosis?.toFixed(3) ?? "–";
+        document.getElementById("min-theo").textContent = json.theo_stats.min?.toFixed(3) ?? "–";
+        document.getElementById("max-theo").textContent = json.theo_stats.max?.toFixed(3) ?? "–";
+      }
 
-      // if (json.hist_stats) {
-      //   document.getElementById("mean-hist").textContent = json.hist_stats.mean?.toFixed(3) ?? "–";
-      //   document.getElementById("var-hist").textContent = json.hist_stats.var?.toFixed(3) ?? "–";
-      //   document.getElementById("skew-hist").textContent = json.hist_stats.skew?.toFixed(3) ?? "–";
-      //   document.getElementById("kurt-hist").textContent = json.hist_stats.kurt?.toFixed(3) ?? "–";
-      //   document.getElementById("min-hist").textContent = json.hist_stats.min?.toFixed(3) ?? "–";
-      //   document.getElementById("max-hist").textContent = json.hist_stats.max?.toFixed(3) ?? "–";
-      // }
+      if (json.hist_stats) {
+        document.getElementById("mean-hist").textContent = json.hist_stats.mean?.toFixed(3) ?? "–";
+        document.getElementById("var-hist").textContent = json.hist_stats.variance?.toFixed(3) ?? "–";
+        document.getElementById("skew-hist").textContent = json.hist_stats.skewness?.toFixed(3) ?? "–";
+        document.getElementById("kurt-hist").textContent = json.hist_stats.kurtosis?.toFixed(3) ?? "–";
+        document.getElementById("min-hist").textContent = json.hist_stats.min?.toFixed(3) ?? "–";
+        document.getElementById("max-hist").textContent = json.hist_stats.max?.toFixed(3) ?? "–";
+      }
 
-      // if (json.other_stats) {
-      //   document.getElementById("N-total").textContent = json.other_stats.N_total?.toFixed(0) ?? "–";
-      //   document.getElementById("r-value").textContent = json.other_stats.r?.toFixed(2) ?? "–";
-      //   document.getElementById("time").textContent = json.other_stats.time?.toFixed(1) ?? "–";
-      // }
+      if (json.other_stats) {
+        document.getElementById("N-total").textContent = json.other_stats.N_total?.toFixed(0) ?? "–";
+        document.getElementById("r-value").textContent = json.other_stats.r?.toFixed(2) ?? "–";
+        document.getElementById("time").textContent = json.other_stats.time?.toFixed(1) ?? "–";
+      }
 
     } catch (err) {
       console.error("Błąd przy generowaniu wykresu:", err);

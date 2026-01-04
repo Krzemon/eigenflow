@@ -270,6 +270,13 @@ canvas {
     gap: 0.5rem;
 }
 
+.nt-error {
+  display: none;
+  color: #c00;
+  font-size: 22px;
+  margin-top: 6px;
+}
+
 .section-title {
     font-size: 1.7rem;
     font-weight: 700;

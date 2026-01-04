@@ -4,8 +4,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("simulation-form");
   const errorBox = document.getElementById("nt-error");
 
-  const API_URI = "https://random-matrix-api.onrender.com/mp/plot";
-
+  const API_URI = "https://random-matrix-api-1.onrender.com/mp/plot";
+  
   /* =======================
      N / T – WALIDACJA
   ======================= */

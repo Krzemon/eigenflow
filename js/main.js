@@ -4,6 +4,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("simulation-form");
   const errorBox = document.getElementById("nt-error");
 
+  const API_URI = "https://random-matrix-api.onrender.com/mp/plot";
+
   /* =======================
      N / T – WALIDACJA
   ======================= */
@@ -191,7 +193,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const payload = { N_list, sigma_squared_list, T, num_trials, dist_name, bins };
 
     try {
-      const response = await fetch("http://localhost:8000/mp/plot", {
+      const response = await fetch(API_URI, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)

@@ -76,7 +76,13 @@
           </label>
         </div>
 
-        <button type="submit" class="submit-button">Generuj wykres</button>
+        <button type="button" id="btn-theo" class="submit-button">Generuj krzywą teoretyczną</button>
+        <button type="button" id="btn-hist" class="submit-button">Generuj histogram</button>
+        <button type="button" id="btn-both" class="submit-button">Generuj oba</button>
+        <div class="save-chart-row">
+          <button type="button" id="btn-save" class="submit-button" disabled>Zapisz wykres</button>
+        </div>
+
       </form>
 
       <div id="nt-error" class="nt-error"></div>
@@ -98,6 +104,7 @@
         <div class="stat-item"><span class="stat-label">Kurtoza</span> <span id="kurt-theo" class="stat-value">–</span></div>
         <div class="stat-item"><span class="stat-label">Min λ</span> <span id="min-theo" class="stat-value">–</span></div>
         <div class="stat-item"><span class="stat-label">Max λ</span> <span id="max-theo" class="stat-value">–</span></div>
+        <div class="stat-item"><span class="stat-label">Czas [s] </span> <span id="time_theo" class="stat-value">–</span></div>
       </div>
 
       <h4 class="stats-type">Histogram</h4>
@@ -108,13 +115,9 @@
         <div class="stat-item"><span class="stat-label">Kurtoza</span> <span id="kurt-hist" class="stat-value">–</span></div>
         <div class="stat-item"><span class="stat-label">Min λ</span> <span id="min-hist" class="stat-value">–</span></div>
         <div class="stat-item"><span class="stat-label">Max λ</span> <span id="max-hist" class="stat-value">–</span></div>
-      </div>
-
-      <h4 class="stats-type">Symulacja</h4>
-      <div class="stats-list">
         <div class="stat-item"><span class="stat-label">N<sub>total</sub>: </span> <span id="N-total" class="stat-value">–</span></div>
         <div class="stat-item"><span class="stat-label">r </span> <span id="r-value" class="stat-value">–</span></div>
-        <div class="stat-item"><span class="stat-label">Czas [s] </span> <span id="time" class="stat-value">–</span></div>
+        <div class="stat-item"><span class="stat-label">Czas [s] </span> <span id="time_hist" class="stat-value">–</span></div>
       </div>
 
     </aside>

@@ -171,6 +171,20 @@ main {
     background-color: #2563eb;
 }
 
+#btn-save {
+    background-color: #10612e; /* ciemna zieleń */
+    color: #fff; /* biały tekst */
+}
+
+#btn-save:hover:not(:disabled) {
+    background-color: #13803a; /* jaśniejsza zieleń przy najechaniu */
+}
+
+#btn-save:disabled {
+    background-color: #7fbf91; /* stonowana zieleń gdy nieaktywny */
+    cursor: not-allowed;
+}
+
 /* tooltip */
 .tooltip {
   position: relative;      /* konieczne dla absolutnego pozycjonowania chmurki */

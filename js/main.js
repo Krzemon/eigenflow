@@ -3,8 +3,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const addBtn = document.getElementById('add-group');
   const form = document.getElementById("simulation-form");
   const errorBox = document.getElementById("nt-error");
-
-  const API_URI = "http://localhost:8000/mp/plot";
   
   /* =======================
      N / T – WALIDACJA
@@ -167,127 +165,266 @@ document.addEventListener("DOMContentLoaded", () => {
   /* =======================
      SUBMIT
   ======================= */
-  
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();          // ZAWSZE blokujemy domyślny submit
+// ---------------- API ----------------
+const API_THEO = "http://localhost:8000/mp/theo";
+const API_HIST = "http://localhost:8000/mp/hist";
 
-    if (!validateNT()) {         // jeśli ΣN > T
-      return;                    // wyjdź — NIC się nie rysuje
-    }
+// ---------------- Stan ostatnich czasów ----------------
+let lastTimes = { theo: 0, hist: 0 };
 
-    // Pobranie danych z formularza
-    const N_list = [];
-    const sigma_squared_list = [];
+// ---------------- Pobranie danych z formularza ----------------
+function getFormData() {
+  const N_list = [];
+  const sigma_squared_list = [];
 
-    container.querySelectorAll('.group-row').forEach(row => {
-      N_list.push(parseInt(row.querySelector('input[name="N_list"]').value));
-      sigma_squared_list.push(parseFloat(row.querySelector('input[name="sigma_squared_list"]').value));
-    });
+  document.querySelectorAll('.group-row').forEach(row => {
+    N_list.push(parseInt(row.querySelector('input[name="N_list"]').value));
+    sigma_squared_list.push(parseFloat(row.querySelector('input[name="sigma_squared_list"]').value));
+  });
 
-    const T = parseInt(form.querySelector('input[name="T"]').value) || 100;
-    const num_trials = parseInt(form.querySelector('input[name="num_trials"]').value) || 10000;
-    const bins = parseInt(form.querySelector('input[name="bins"]').value) || 50;
-    const distSelect = form.querySelector('select[name="dist_name"]');
-    const dist_name = distSelect.value;
+  const T = parseInt(document.querySelector('input[name="T"]').value) || 100;
+  const num_trials = parseInt(document.querySelector('input[name="num_trials"]').value) || 10000;
+  const bins = parseInt(document.querySelector('input[name="bins"]').value) || 50;
+  const dist_name = document.querySelector('select[name="dist_name"]').value;
 
-    const payload = { N_list, sigma_squared_list, T, num_trials, dist_name, bins };
+  return { N_list, sigma_squared_list, T, num_trials, dist_name, bins };
+}
 
-    try {
-      const response = await fetch(API_URI, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
+// ---------------- Wyczyszczenie wykresu i statystyk ----------------
+function showLoading(message = "Trwa obliczanie…") {
+  const ctx = document.getElementById("histogram-chart").getContext("2d");
+  if (window.currentChart) window.currentChart.destroy();
 
-      const json = await response.json();
+  window.currentChart = new Chart(ctx, {
+    type: "bar",
+    data: { labels: [], datasets: [{ label: message, data: [], backgroundColor: "rgba(200,200,200,0.5)" }] },
+    options: { responsive: true, maintainAspectRatio: false }
+  });
 
-      if (json.error) {
-        console.error("Błąd z backendu:", json.error);
-        return;
+  ["mean-theo","var-theo","skew-theo","kurt-theo","min-theo","max-theo","time_theo",
+   "mean-hist","var-hist","skew-hist","kurt-hist","min-hist","max-hist","time_hist",
+   "N-total","r-value"].forEach(id => {
+     document.getElementById(id).textContent = "–";
+  });
+
+  document.getElementById("btn-save").disabled = true;
+}
+
+// ---------------- Rysowanie wykresu ----------------
+function drawChart(datasets, xLabel="Wartości własne λ", yLabel="Gęstość prawdopodobieństwa") {
+  const ctx = document.getElementById("histogram-chart").getContext("2d");
+  if (window.currentChart) window.currentChart.destroy();
+
+  window.currentChart = new Chart(ctx, {
+    data: { datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: { type: "linear", title: { display: true, text: xLabel, font: {size: 22} }, ticks: { font: { size: 18 } } },
+        y: { title: { display: true, text: yLabel, font: {size: 22} }, ticks: { font: { size: 18 } } }
+      },
+      plugins: {
+        legend: { position: "top" },
+        tooltip: { mode: "index", intersect: false }
       }
-
-      const ctx = document.getElementById("histogram-chart").getContext("2d");
-      if (window.currentChart) window.currentChart.destroy();
-
-      const datasets = [
-        {
-          type: "bar",
-          label: "Histogram",
-          data: json.y_hist,
-          backgroundColor: "rgba(59,130,246,0.5)",
-          borderColor: "rgb(37,99,235)",
-          borderWidth: 1,
-          order: 2
-        }
-      ];
-
-      if (json.x_theory && json.y_theory) {
-        datasets.push({
-          type: "line",
-          label: "Krzywa teoretyczna",
-          data: json.x_theory.map((x, i) => ({ x: x, y: json.y_theory[i] })),
-          borderColor: "rgb(234,88,12)",
-          borderWidth: 2,
-          fill: false,
-          tension: 0.3,
-          pointRadius: 0,
-          order: 1,
-          parsing: { xAxisKey: "x", yAxisKey: "y" }
-        });
-      }
-
-      window.currentChart = new Chart(ctx, {
-        type: "bar",
-        data: {
-          labels: json.x_hist,
-          datasets: datasets
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            x: { type: "linear",
-                title: { display: true, text: "Wartości własne λ", font: {size: 22} },
-                ticks: { font: { size: 18 } }
-              },
-            y: {
-                title: { display: true, text: "Gęstość prawdopodobieństwa", font: {size: 22} },
-                ticks: { font: { size: 18 } }
-              }
-          },
-          plugins: {
-            legend: { position: "top" },
-            tooltip: { mode: "index", intersect: false }
-          }
-        }
-      });
-
-      if (json.theo_stats) {
-        document.getElementById("mean-theo").textContent = json.theo_stats.mean?.toFixed(3) ?? "–";
-        document.getElementById("var-theo").textContent = json.theo_stats.variance?.toFixed(3) ?? "–";
-        document.getElementById("skew-theo").textContent = json.theo_stats.skewness?.toFixed(3) ?? "–";
-        document.getElementById("kurt-theo").textContent = json.theo_stats.kurtosis?.toFixed(3) ?? "–";
-        document.getElementById("min-theo").textContent = json.theo_stats.min?.toFixed(3) ?? "–";
-        document.getElementById("max-theo").textContent = json.theo_stats.max?.toFixed(3) ?? "–";
-      }
-
-      if (json.hist_stats) {
-        document.getElementById("mean-hist").textContent = json.hist_stats.mean?.toFixed(3) ?? "–";
-        document.getElementById("var-hist").textContent = json.hist_stats.variance?.toFixed(3) ?? "–";
-        document.getElementById("skew-hist").textContent = json.hist_stats.skewness?.toFixed(3) ?? "–";
-        document.getElementById("kurt-hist").textContent = json.hist_stats.kurtosis?.toFixed(3) ?? "–";
-        document.getElementById("min-hist").textContent = json.hist_stats.min?.toFixed(3) ?? "–";
-        document.getElementById("max-hist").textContent = json.hist_stats.max?.toFixed(3) ?? "–";
-      }
-
-      if (json.other_stats) {
-        document.getElementById("N-total").textContent = json.other_stats.N_total?.toFixed(0) ?? "–";
-        document.getElementById("r-value").textContent = json.other_stats.r?.toFixed(2) ?? "–";
-        document.getElementById("time").textContent = json.other_stats.time?.toFixed(1) ?? "–";
-      }
-
-    } catch (err) {
-      console.error("Błąd przy generowaniu wykresu:", err);
     }
   });
+
+  document.getElementById("btn-save").disabled = false;
+}
+
+// ---------------- Teoria ----------------
+async function generateTheory() {
+  const payload = getFormData();
+  showLoading("Obliczanie krzywej teoretycznej…");
+
+  try {
+    const res = await fetch(API_THEO, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    const json = await res.json();
+    if (json.error) return console.error("Błąd backendu:", json.error);
+
+    lastTimes.theo = json.time_theo || 0;
+
+    drawChart([{
+      type: "line",
+      label: "Krzywa teoretyczna",
+      data: json.x_theory.map((x,i) => ({x, y: json.y_theory[i]})),
+      borderColor: "rgb(234,88,12)",
+      borderWidth: 2,
+      fill: false,
+      tension: 0.3,
+      pointRadius: 0,
+      parsing: { xAxisKey: "x", yAxisKey: "y" }
+    }]);
+
+    if (json.theo_stats) {
+      document.getElementById("mean-theo").textContent = json.theo_stats.mean?.toFixed(3) ?? "–";
+      document.getElementById("var-theo").textContent = json.theo_stats.variance?.toFixed(3) ?? "–";
+      document.getElementById("skew-theo").textContent = json.theo_stats.skewness?.toFixed(3) ?? "–";
+      document.getElementById("kurt-theo").textContent = json.theo_stats.kurtosis?.toFixed(3) ?? "–";
+      document.getElementById("min-theo").textContent = json.theo_stats.min?.toFixed(3) ?? "–";
+      document.getElementById("max-theo").textContent = json.theo_stats.max?.toFixed(3) ?? "–";
+      document.getElementById("time_theo").textContent = json.time_theo?.toFixed(2) ?? "–";
+    }
+
+  } catch (err) {
+    console.error("Błąd przy generowaniu krzywej teoretycznej:", err);
+  }
+}
+
+// ---------------- Histogram ----------------
+async function generateHistogram() {
+  const payload = getFormData();
+  showLoading("Obliczanie histogramu…");
+
+  try {
+    const res = await fetch(API_HIST, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    const json = await res.json();
+    if (json.error) return console.error("Błąd backendu:", json.error);
+
+    lastTimes.hist = json.time_hist || 0;
+
+    drawChart([{
+      type: "bar",
+      label: "Histogram",
+      data: json.y_hist.map((v,i) => ({x: json.x_hist[i], y: v})),
+      backgroundColor: "rgba(59,130,246,0.5)",
+      borderColor: "rgb(37,99,235)",
+      borderWidth: 1
+    }]);
+
+    if (json.hist_stats) {
+      document.getElementById("mean-hist").textContent = json.hist_stats.mean?.toFixed(3) ?? "–";
+      document.getElementById("var-hist").textContent = json.hist_stats.variance?.toFixed(3) ?? "–";
+      document.getElementById("skew-hist").textContent = json.hist_stats.skewness?.toFixed(3) ?? "–";
+      document.getElementById("kurt-hist").textContent = json.hist_stats.kurtosis?.toFixed(3) ?? "–";
+      document.getElementById("min-hist").textContent = json.hist_stats.min?.toFixed(3) ?? "–";
+      document.getElementById("max-hist").textContent = json.hist_stats.max?.toFixed(3) ?? "–";
+      document.getElementById("time_hist").textContent = json.time_hist?.toFixed(2) ?? "–";
+    }
+
+    if (json.other_stats) {
+      document.getElementById("N-total").textContent = json.other_stats.N_total?.toFixed(0) ?? "–";
+      document.getElementById("r-value").textContent = json.other_stats.r?.toFixed(5) ?? "–";
+    }
+
+  } catch (err) {
+    console.error("Błąd przy generowaniu histogramu:", err);
+  }
+}
+
+// ---------------- Generowanie obu ----------------
+async function generateBoth() {
+  const payload = getFormData();
+  showLoading("Obliczanie obu…");
+
+  try {
+    // Pobranie równoległe obu endpointów
+    const [resTheo, resHist] = await Promise.all([
+      fetch(API_THEO, { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify(payload) }),
+      fetch(API_HIST, { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify(payload) })
+    ]);
+
+    const jsonTheo = await resTheo.json();
+    const jsonHist = await resHist.json();
+
+    if (jsonTheo.error) return console.error("Błąd backendu (teoria):", jsonTheo.error);
+    if (jsonHist.error) return console.error("Błąd backendu (histogram):", jsonHist.error);
+
+    lastTimes.theo = jsonTheo.time_theo || 0;
+    lastTimes.hist = jsonHist.time_hist || 0;
+
+    const datasets = [
+      {
+        type: "line",
+        label: "Krzywa teoretyczna",
+        data: jsonTheo.x_theory.map((x,i) => ({x, y: jsonTheo.y_theory[i]})),
+        borderColor: "rgb(234,88,12)",
+        borderWidth: 2,
+        fill: false,
+        tension: 0.3,
+        pointRadius: 0,
+        parsing: { xAxisKey: "x", yAxisKey: "y" }
+      },
+      {
+        type: "bar",
+        label: "Histogram",
+        data: jsonHist.y_hist.map((v,i) => ({x: jsonHist.x_hist[i], y: v})),
+        backgroundColor: "rgba(59,130,246,0.5)",
+        borderColor: "rgb(37,99,235)",
+        borderWidth: 1
+      }
+    ];
+
+    drawChart(datasets);
+
+    // Teoria
+    if (jsonTheo.theo_stats) {
+      document.getElementById("mean-theo").textContent = jsonTheo.theo_stats.mean?.toFixed(3) ?? "–";
+      document.getElementById("var-theo").textContent = jsonTheo.theo_stats.variance?.toFixed(3) ?? "–";
+      document.getElementById("skew-theo").textContent = jsonTheo.theo_stats.skewness?.toFixed(3) ?? "–";
+      document.getElementById("kurt-theo").textContent = jsonTheo.theo_stats.kurtosis?.toFixed(3) ?? "–";
+      document.getElementById("min-theo").textContent = jsonTheo.theo_stats.min?.toFixed(3) ?? "–";
+      document.getElementById("max-theo").textContent = jsonTheo.theo_stats.max?.toFixed(3) ?? "–";
+      document.getElementById("time_theo").textContent = jsonTheo.time_theo?.toFixed(2) ?? "–";
+    }
+
+    // Histogram
+    if (jsonHist.hist_stats) {
+      document.getElementById("mean-hist").textContent = jsonHist.hist_stats.mean?.toFixed(3) ?? "–";
+      document.getElementById("var-hist").textContent = jsonHist.hist_stats.variance?.toFixed(3) ?? "–";
+      document.getElementById("skew-hist").textContent = jsonHist.hist_stats.skewness?.toFixed(3) ?? "–";
+      document.getElementById("kurt-hist").textContent = jsonHist.hist_stats.kurtosis?.toFixed(3) ?? "–";
+      document.getElementById("min-hist").textContent = jsonHist.hist_stats.min?.toFixed(3) ?? "–";
+      document.getElementById("max-hist").textContent = jsonHist.hist_stats.max?.toFixed(3) ?? "–";
+      document.getElementById("time_hist").textContent = jsonHist.time_hist?.toFixed(2) ?? "–";
+    }
+
+    if (jsonHist.other_stats) {
+      document.getElementById("N-total").textContent = jsonHist.other_stats.N_total?.toFixed(0) ?? "–";
+      document.getElementById("r-value").textContent = jsonHist.other_stats.r?.toFixed(5) ?? "–";
+    }
+
+  } catch (err) {
+    console.error("Błąd przy generowaniu obu:", err);
+  }
+}
+
+// ---------------- Zapis wykresu jako JPG ----------------
+function saveChartAsJPG() {
+  if (!window.currentChart) return;
+
+  const canvas = document.getElementById("histogram-chart");
+  const tmpCanvas = document.createElement("canvas");
+  tmpCanvas.width = canvas.width;
+  tmpCanvas.height = canvas.height;
+  const ctx = tmpCanvas.getContext("2d");
+
+  ctx.fillStyle = "#ffffff"; // białe tło
+  ctx.fillRect(0, 0, tmpCanvas.width, tmpCanvas.height);
+  ctx.drawImage(canvas, 0, 0);
+
+  const dataURL = tmpCanvas.toDataURL("image/jpeg", 1.0);
+
+  const link = document.createElement("a");
+  link.href = dataURL;
+  link.download = "chart.jpg";
+  link.click();
+}
+
+// ---------------- Eventy ----------------
+document.getElementById("btn-theo").addEventListener("click", generateTheory);
+document.getElementById("btn-hist").addEventListener("click", generateHistogram);
+document.getElementById("btn-both").addEventListener("click", generateBoth);
+document.getElementById("btn-save").addEventListener("click", saveChartAsJPG);
+
 });

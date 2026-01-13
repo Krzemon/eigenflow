@@ -166,8 +166,8 @@ document.addEventListener("DOMContentLoaded", () => {
      SUBMIT
   ======================= */
 // ---------------- API ----------------
-const API_THEO = "http://localhost:8000/mp/theo";
-const API_HIST = "http://localhost:8000/mp/hist";
+const API_THEO = "https://random-matrix-api.onrender.com/mp/theo";
+const API_HIST = "https://random-matrix-api.onrender.com/mp/hist";
 
 // ---------------- Stan ostatnich czasów ----------------
 let lastTimes = { theo: 0, hist: 0 };

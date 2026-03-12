@@ -34,3 +34,7 @@ The application retrieves data from a **backend API**, which provides the requir
 Backend repository: https://github.com/Krzemon/random-matrix-api
 
 Static frontend files are hosted on **GitHub Pages**, allowing the application to be publicly accessible in a web browser without requiring a dedicated server.
+
+<p align="center">
+  <img src="front.drawio.png" alt="UML component diagram." width="600"/>
+</p>

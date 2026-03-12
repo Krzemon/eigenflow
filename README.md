@@ -31,4 +31,6 @@ Charts and visualizations are generated using **Chart.js (`chart.umd.min.js`)**,
 
 The application retrieves data from a **backend API**, which provides the required data in **JSON format**.
 
+Backend repository: https://github.com/Krzemon/random-matrix-api
+
 Static frontend files are hosted on **GitHub Pages**, allowing the application to be publicly accessible in a web browser without requiring a dedicated server.
